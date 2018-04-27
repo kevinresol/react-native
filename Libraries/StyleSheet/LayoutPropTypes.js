@@ -1,24 +1,21 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
- * @providesModule LayoutPropTypes
  * @flow
  */
 'use strict';
 
-var ReactPropTypes = require('React').PropTypes;
+var ReactPropTypes = require('prop-types');
 
 /**
  * React Native's layout system is based on Flexbox and is powered both
- * on iOS and Android by an open source project called css-layout:
- * https://github.com/facebook/css-layout
+ * on iOS and Android by an open source project called `Yoga`:
+ * https://github.com/facebook/yoga
  *
- * The implementation in css-layout is slightly different from what the
+ * The implementation in Yoga is slightly different from what the
  * Flexbox spec defines - for example, we chose more sensible default
  * values. Since our layout docs are generated from the comments in this
  * file, please keep a brief comment describing each prop type.
@@ -27,6 +24,16 @@ var ReactPropTypes = require('React').PropTypes;
  * algorithm and affect the positioning and sizing of views.
  */
 var LayoutPropTypes = {
+  /** `display` sets the display type of this component.
+   *
+   *  It works similarly to `display` in CSS, but only support 'flex' and 'none'.
+   *  'flex' is the default.
+   */
+  display: ReactPropTypes.oneOf([
+    'none',
+    'flex',
+  ]),
+
   /** `width` sets the width of this component.
    *
    *  It works similarly to `width` in CSS, but in React Native you
@@ -45,6 +52,28 @@ var LayoutPropTypes = {
    *  See https://developer.mozilla.org/en-US/docs/Web/CSS/height for more details.
    */
   height: ReactPropTypes.oneOfType([
+    ReactPropTypes.number,
+    ReactPropTypes.string,
+  ]),
+
+  /**
+   * When the direction is `ltr`, `start` is equivalent to `left`.
+   * When the direction is `rtl`, `start` is equivalent to `right`.
+   *
+   * This style takes precedence over the `left`, `right`, and `end` styles.
+   */
+  start: ReactPropTypes.oneOfType([
+    ReactPropTypes.number,
+    ReactPropTypes.string,
+  ]),
+
+  /**
+   * When the direction is `ltr`, `end` is equivalent to `right`.
+   * When the direction is `rtl`, `end` is equivalent to `left`.
+   *
+   * This style takes precedence over the `left` and `right` styles.
+   */
+  end: ReactPropTypes.oneOfType([
     ReactPropTypes.number,
     ReactPropTypes.string,
   ]),
@@ -219,6 +248,24 @@ var LayoutPropTypes = {
     ReactPropTypes.string,
   ]),
 
+  /**
+   * When direction is `ltr`, `marginStart` is equivalent to `marginLeft`.
+   * When direction is `rtl`, `marginStart` is equivalent to `marginRight`.
+   */
+  marginStart: ReactPropTypes.oneOfType([
+    ReactPropTypes.number,
+    ReactPropTypes.string,
+  ]),
+
+  /**
+   * When direction is `ltr`, `marginEnd` is equivalent to `marginRight`.
+   * When direction is `rtl`, `marginEnd` is equivalent to `marginLeft`.
+   */
+  marginEnd: ReactPropTypes.oneOfType([
+    ReactPropTypes.number,
+    ReactPropTypes.string,
+  ]),
+
   /** Setting `padding` has the same effect as setting each of
    *  `paddingTop`, `paddingBottom`, `paddingLeft`, and `paddingRight`.
    *  See https://developer.mozilla.org/en-US/docs/Web/CSS/padding
@@ -281,6 +328,24 @@ var LayoutPropTypes = {
     ReactPropTypes.string,
   ]),
 
+  /**
+   * When direction is `ltr`, `paddingStart` is equivalent to `paddingLeft`.
+   * When direction is `rtl`, `paddingStart` is equivalent to `paddingRight`.
+   */
+  paddingStart: ReactPropTypes.oneOfType([
+    ReactPropTypes.number,
+    ReactPropTypes.string,
+  ]),
+
+  /**
+   * When direction is `ltr`, `paddingEnd` is equivalent to `paddingRight`.
+   * When direction is `rtl`, `paddingEnd` is equivalent to `paddingLeft`.
+   */
+  paddingEnd: ReactPropTypes.oneOfType([
+    ReactPropTypes.number,
+    ReactPropTypes.string,
+  ]),
+
   /** `borderWidth` works like `border-width` in CSS.
    * See https://developer.mozilla.org/en-US/docs/Web/CSS/border-width
    * for more details.
@@ -292,6 +357,18 @@ var LayoutPropTypes = {
    * for more details.
    */
   borderTopWidth: ReactPropTypes.number,
+
+  /**
+   * When direction is `ltr`, `borderStartWidth` is equivalent to `borderLeftWidth`.
+   * When direction is `rtl`, `borderStartWidth` is equivalent to `borderRightWidth`.
+   */
+  borderStartWidth: ReactPropTypes.number,
+
+  /**
+   * When direction is `ltr`, `borderEndWidth` is equivalent to `borderRightWidth`.
+   * When direction is `rtl`, `borderEndWidth` is equivalent to `borderLeftWidth`.
+   */
+  borderEndWidth: ReactPropTypes.number,
 
   /** `borderRightWidth` works like `border-right-width` in CSS.
    * See https://developer.mozilla.org/en-US/docs/Web/CSS/border-right-width
@@ -323,7 +400,7 @@ var LayoutPropTypes = {
    *  that is not its parent, just don't use styles for that. Use the
    *  component tree.
    *
-   *  See https://github.com/facebook/css-layout
+   *  See https://github.com/facebook/yoga
    *  for more details on how `position` differs between React Native
    *  and CSS.
    */
@@ -354,7 +431,8 @@ var LayoutPropTypes = {
    */
   flexWrap: ReactPropTypes.oneOf([
     'wrap',
-    'nowrap'
+    'nowrap',
+    'wrap-reverse'
   ]),
 
   /** `justifyContent` aligns children in the main direction.
@@ -369,7 +447,8 @@ var LayoutPropTypes = {
     'flex-end',
     'center',
     'space-between',
-    'space-around'
+    'space-around',
+    'space-evenly'
   ]),
 
   /** `alignItems` aligns children in the cross direction.
@@ -402,12 +481,28 @@ var LayoutPropTypes = {
     'baseline'
   ]),
 
-  /** `overflow` controls how a children are measured and displayed.
+  /** `alignContent` controls how rows align in the cross direction,
+   *  overriding the `alignContent` of the parent.
+   *  See https://developer.mozilla.org/en-US/docs/Web/CSS/align-content
+   *  for more details.
+   */
+  alignContent: ReactPropTypes.oneOf([
+    'flex-start',
+    'flex-end',
+    'center',
+    'stretch',
+    'space-between',
+    'space-around'
+  ]),
+
+  /** `overflow` controls how children are measured and displayed.
    *  `overflow: hidden` causes views to be clipped while `overflow: scroll`
-   *  causes views to be measured independently of their parents main axis.`
+   *  causes views to be measured independently of their parents main axis.
    *  It works like `overflow` in CSS (default: visible).
    *  See https://developer.mozilla.org/en/docs/Web/CSS/overflow
    *  for more details.
+   *  `overflow: visible` only works on iOS. On Android, all views will clip
+   *  their children.
    */
   overflow: ReactPropTypes.oneOf([
     'visible',
@@ -417,8 +512,8 @@ var LayoutPropTypes = {
 
   /** In React Native `flex` does not work the same way that it does in CSS.
    *  `flex` is a number rather than a string, and it works
-   *  according to the `css-layout` library
-   *  at https://github.com/facebook/css-layout.
+   *  according to the `Yoga` library
+   *  at https://github.com/facebook/yoga
    *
    *  When `flex` is a positive number, it makes the component flexible
    *  and it will be sized proportional to its flex value. So a
@@ -470,6 +565,19 @@ var LayoutPropTypes = {
    *  more details.
    */
   zIndex: ReactPropTypes.number,
+
+  /** `direction` specifies the directional flow of the user interface.
+   *  The default is `inherit`, except for root node which will have
+   *  value based on the current locale.
+   *  See https://facebook.github.io/yoga/docs/rtl/
+   *  for more details.
+   *  @platform ios
+   */
+  direction: ReactPropTypes.oneOf([
+    'inherit',
+    'ltr',
+    'rtl',
+  ]),
 };
 
 module.exports = LayoutPropTypes;

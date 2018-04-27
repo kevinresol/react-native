@@ -1,10 +1,8 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 package com.facebook.react.flat;
@@ -12,6 +10,7 @@ package com.facebook.react.flat;
 import javax.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -20,6 +19,7 @@ import android.util.SparseIntArray;
 import android.view.View;
 import android.view.animation.Animation;
 
+import com.facebook.common.logging.FLog;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.uimanager.ReactClippingViewGroup;
 import com.facebook.react.uimanager.ReactClippingViewGroupHelper;
@@ -144,6 +144,9 @@ import com.facebook.react.uimanager.ReactClippingViewGroupHelper;
  * loosely sorted as well when clipping.
  */
 /* package */ abstract class ClippingDrawCommandManager extends DrawCommandManager {
+
+  private static final String TAG = ClippingDrawCommandManager.class.getSimpleName();
+
   private final FlatViewGroup mFlatViewGroup;
   private DrawCommand[] mDrawCommands = DrawCommand.EMPTY_ARRAY;
   protected float[] mCommandMaxBottom = StateBuilder.EMPTY_FLOAT_ARRAY;
@@ -616,7 +619,17 @@ import com.facebook.react.uimanager.ReactClippingViewGroupHelper;
     // If we get here, it means we have drawn all the views, now just draw the remaining draw
     // commands.
     while (commandIndex < mStop) {
-      mDrawCommands[commandIndex++].draw(mFlatViewGroup, canvas);
+      DrawCommand command = mDrawCommands[commandIndex++];
+      if (command instanceof DrawView) {
+        // We should never have more DrawView commands at this point. But in case we do, fail safely
+        // by ignoring the DrawView command
+        FLog.w(
+            TAG,
+            "Unexpected DrawView command at index " + (commandIndex-1) + " with mStop=" +
+              mStop + ". " + Arrays.toString(mDrawCommands));
+        continue;
+      }
+      command.draw(mFlatViewGroup, canvas);
     }
   }
 

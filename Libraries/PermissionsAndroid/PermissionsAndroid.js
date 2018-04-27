@@ -1,64 +1,25 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
- * @providesModule PermissionsAndroid
  * @flow
  */
 'use strict';
 
-const DialogManagerAndroid = require('NativeModules').DialogManagerAndroid;
-const Permissions = require('NativeModules').PermissionsAndroid;
+const NativeModules = require('NativeModules');
 
 type Rationale = {
-  title: string;
-  message: string;
+  title: string,
+  message: string,
 }
 
 type PermissionStatus = 'granted' | 'denied' | 'never_ask_again';
-
 /**
  * `PermissionsAndroid` provides access to Android M's new permissions model.
- * Some permissions are granted by default when the application is installed
- * so long as they appear in `AndroidManifest.xml`. However, "dangerous"
- * permissions require a dialog prompt. You should use this module for those
- * permissions.
  *
- * On devices before SDK version 23, the permissions are automatically granted
- * if they appear in the manifest, so `check` and `request`
- * should always be true.
- *
- * If a user has previously turned off a permission that you prompt for, the OS
- * will advise your app to show a rationale for needing the permission. The
- * optional `rationale` argument will show a dialog prompt only if
- * necessary - otherwise the normal permission prompt will appear.
- *
- * ### Example
- * ```
- * async function requestCameraPermission() {
- *   try {
- *     const granted = await PermissionsAndroid.request(
- *       PermissionsAndroid.PERMISSIONS.CAMERA,
- *       {
- *         'title': 'Cool Photo App Camera Permission',
- *         'message': 'Cool Photo App needs access to your camera ' +
- *                    'so you can take awesome pictures.'
- *       }
- *     )
- *     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
- *       console.log("You can use the camera")
- *     } else {
- *       console.log("Camera permission denied")
- *     }
- *   } catch (err) {
- *     console.warn(err)
- *   }
- * }
- * ```
+ * See https://facebook.github.io/react-native/docs/permissionsandroid.html
  */
 
 class PermissionsAndroid {
@@ -113,15 +74,17 @@ class PermissionsAndroid {
    */
   checkPermission(permission: string) : Promise<boolean> {
     console.warn('"PermissionsAndroid.checkPermission" is deprecated. Use "PermissionsAndroid.check" instead');
-    return Permissions.checkPermission(permission);
+    return NativeModules.PermissionsAndroid.checkPermission(permission);
   }
 
   /**
    * Returns a promise resolving to a boolean value as to whether the specified
    * permissions has been granted
+   *
+   * See https://facebook.github.io/react-native/docs/permissionsandroid.html#check
    */
   check(permission: string) : Promise<boolean> {
-    return Permissions.checkPermission(permission);
+    return NativeModules.PermissionsAndroid.checkPermission(permission);
   }
 
   /**
@@ -148,36 +111,34 @@ class PermissionsAndroid {
    * Prompts the user to enable a permission and returns a promise resolving to a
    * string value indicating whether the user allowed or denied the request
    *
-   * If the optional rationale argument is included (which is an object with a
-   * `title` and `message`), this function checks with the OS whether it is
-   * necessary to show a dialog explaining why the permission is needed
-   * (https://developer.android.com/training/permissions/requesting.html#explain)
-   * and then shows the system permission dialog
+   * See https://facebook.github.io/react-native/docs/permissionsandroid.html#request
    */
   async request(permission: string, rationale?: Rationale) : Promise<PermissionStatus> {
     if (rationale) {
-      const shouldShowRationale = await Permissions.shouldShowRequestPermissionRationale(permission);
+      const shouldShowRationale = await NativeModules.PermissionsAndroid.shouldShowRequestPermissionRationale(permission);
 
       if (shouldShowRationale) {
         return new Promise((resolve, reject) => {
-          DialogManagerAndroid.showAlert(
+          NativeModules.DialogManagerAndroid.showAlert(
             rationale,
             () => reject(new Error('Error showing rationale')),
-            () => resolve(Permissions.requestPermission(permission))
+            () => resolve(NativeModules.PermissionsAndroid.requestPermission(permission))
           );
         });
       }
     }
-    return Permissions.requestPermission(permission);
+    return NativeModules.PermissionsAndroid.requestPermission(permission);
   }
 
   /**
    * Prompts the user to enable multiple permissions in the same dialog and
    * returns an object with the permissions as keys and strings as values
    * indicating whether the user allowed or denied the request
+   *
+   * See https://facebook.github.io/react-native/docs/permissionsandroid.html#requestmultiple
    */
   requestMultiple(permissions: Array<string>) : Promise<{[permission: string]: PermissionStatus}> {
-    return Permissions.requestMultiplePermissions(permissions);
+    return NativeModules.PermissionsAndroid.requestMultiplePermissions(permissions);
   }
 }
 

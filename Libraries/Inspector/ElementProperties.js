@@ -1,17 +1,15 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ElementProperties
  * @flow
  */
 'use strict';
 
 const BoxInspector = require('BoxInspector');
+const PropTypes = require('prop-types');
 const React = require('React');
 const StyleInspector = require('StyleInspector');
 const StyleSheet = require('StyleSheet');
@@ -24,18 +22,16 @@ const flattenStyle = require('flattenStyle');
 const mapWithSeparator = require('mapWithSeparator');
 const openFileInEditor = require('openFileInEditor');
 
-const PropTypes = React.PropTypes;
+import type {DangerouslyImpreciseStyleProp} from 'StyleSheet';
 
-class ElementProperties extends React.Component {
-  props: {
-    hierarchy: Array<$FlowFixMe>,
-    style?: Object | Array<$FlowFixMe> | number,
-    source?: {
-      fileName?: string,
-      lineNumber?: number,
-    },
-  };
-
+class ElementProperties extends React.Component<{
+  hierarchy: Array<$FlowFixMe>,
+  style?: DangerouslyImpreciseStyleProp,
+  source?: {
+    fileName?: string,
+    lineNumber?: number,
+  },
+}> {
   static propTypes = {
     hierarchy: PropTypes.array.isRequired,
     style: PropTypes.oneOfType([
@@ -77,14 +73,14 @@ class ElementProperties extends React.Component {
           <View style={styles.breadcrumb}>
             {mapWithSeparator(
               this.props.hierarchy,
-              (item, i) => (
+              (hierarchyItem, i) => (
                 <TouchableHighlight
                   key={'item-' + i}
                   style={[styles.breadItem, i === selection && styles.selected]}
                   // $FlowFixMe found when converting React.createClass to ES6
                   onPress={() => this.props.setSelection(i)}>
                   <Text style={styles.breadItemText}>
-                    {getInstanceName(item)}
+                    {hierarchyItem.name}
                   </Text>
                 </TouchableHighlight>
               ),
@@ -108,16 +104,6 @@ class ElementProperties extends React.Component {
       </TouchableWithoutFeedback>
     );
   }
-}
-
-function getInstanceName(instance) {
-  if (instance.getName) {
-    return instance.getName();
-  }
-  if (instance.constructor && instance.constructor.displayName) {
-    return instance.constructor.displayName;
-  }
-  return 'Unknown';
 }
 
 const styles = StyleSheet.create({

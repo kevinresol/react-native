@@ -1,10 +1,8 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import "RCTLog.h"
@@ -13,8 +11,8 @@
 #include <cxxabi.h>
 
 #import "RCTAssert.h"
-#import "RCTBridge.h"
 #import "RCTBridge+Private.h"
+#import "RCTBridge.h"
 #import "RCTDefines.h"
 #import "RCTRedBox.h"
 #import "RCTUtils.h"
@@ -199,6 +197,41 @@ static NSRegularExpression *nativeStackFrameRegex()
   return _regex;
 }
 
+NSArray<NSDictionary *>* RCTGetCallStack(const char *fileName, int lineNumber)
+{
+  NSArray<NSString *> *stackSymbols = [NSThread callStackSymbols];
+  NSMutableArray<NSDictionary *> *stack =
+  [NSMutableArray arrayWithCapacity:(stackSymbols.count - 1)];
+  [stackSymbols enumerateObjectsUsingBlock:^(NSString *frameSymbols, NSUInteger idx, __unused BOOL *stop) {
+    if (idx == 0) {
+      // don't include the current frame
+      return;
+    }
+
+    NSRange range = NSMakeRange(0, frameSymbols.length);
+    NSTextCheckingResult *match = [nativeStackFrameRegex() firstMatchInString:frameSymbols options:0 range:range];
+    if (!match) {
+      return;
+    }
+
+    NSString *methodName = [frameSymbols substringWithRange:[match rangeAtIndex:1]];
+    char *demangledName = abi::__cxa_demangle([methodName UTF8String], NULL, NULL, NULL);
+    if (demangledName) {
+      methodName = @(demangledName);
+      free(demangledName);
+    }
+
+    if (idx == 1 && fileName) {
+      NSString *file = [@(fileName) componentsSeparatedByString:@"/"].lastObject;
+      [stack addObject:@{@"methodName": methodName, @"file": file, @"lineNumber": @(lineNumber)}];
+    } else {
+      [stack addObject:@{@"methodName": methodName}];
+    }
+  }];
+
+  return [stack copy];
+}
+
 void _RCTLogNativeInternal(RCTLogLevel level, const char *fileName, int lineNumber, NSString *format, ...)
 {
   RCTLogFunction logFunction = RCTGetLocalLogFunction();
@@ -218,36 +251,8 @@ void _RCTLogNativeInternal(RCTLogLevel level, const char *fileName, int lineNumb
 #if RCT_DEBUG
 
     // Log to red box in debug mode.
-    if ([UIApplication sharedApplication] && level >= RCTLOG_REDBOX_LEVEL) {
-      NSArray<NSString *> *stackSymbols = [NSThread callStackSymbols];
-      NSMutableArray<NSDictionary *> *stack =
-        [NSMutableArray arrayWithCapacity:(stackSymbols.count - 1)];
-      [stackSymbols enumerateObjectsUsingBlock:^(NSString *frameSymbols, NSUInteger idx, __unused BOOL *stop) {
-        if (idx == 0) {
-          // don't include the current frame
-          return;
-        }
-
-        NSRange range = NSMakeRange(0, frameSymbols.length);
-        NSTextCheckingResult *match = [nativeStackFrameRegex() firstMatchInString:frameSymbols                                                                           options:0 range:range];
-        if (!match) {
-          return;
-        }
-
-        NSString *methodName = [frameSymbols substringWithRange:[match rangeAtIndex:1]];
-        char *demangledName = abi::__cxa_demangle([methodName UTF8String], NULL, NULL, NULL);
-        if (demangledName) {
-          methodName = @(demangledName);
-          free(demangledName);
-        }
-
-        if (idx == 1 && fileName) {
-          NSString *file = [@(fileName) componentsSeparatedByString:@"/"].lastObject;
-          [stack addObject:@{@"methodName": methodName, @"file": file, @"lineNumber": @(lineNumber)}];
-        } else {
-          [stack addObject:@{@"methodName": methodName}];
-        }
-      }];
+    if (RCTSharedApplication() && level >= RCTLOG_REDBOX_LEVEL) {
+      NSArray<NSDictionary *> *stack = RCT_CALLSTACK;
 
       dispatch_async(dispatch_get_main_queue(), ^{
         // red box is thread safe, but by deferring to main queue we avoid a startup

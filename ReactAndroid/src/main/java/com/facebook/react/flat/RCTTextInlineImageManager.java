@@ -1,10 +1,8 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 package com.facebook.react.flat;
@@ -12,11 +10,13 @@ package com.facebook.react.flat;
 /**
  * ViewManager that creates instances of RCTTextInlineImage.
  */
-/* package */ final class RCTTextInlineImageManager extends VirtualViewManager<RCTTextInlineImage> {
+public final class RCTTextInlineImageManager extends VirtualViewManager<RCTTextInlineImage> {
+
+  /* package */ static final String REACT_CLASS = "RCTTextInlineImage";
 
   @Override
   public String getName() {
-    return "RCTTextInlineImage";
+    return REACT_CLASS;
   }
 
   @Override

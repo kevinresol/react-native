@@ -1,10 +1,8 @@
-/**
+/*
  * Copyright (c) 2014-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 package com.facebook.yoga;
@@ -18,9 +16,11 @@ public enum YogaAlign {
   CENTER(2),
   FLEX_END(3),
   STRETCH(4),
-  BASELINE(5);
+  BASELINE(5),
+  SPACE_BETWEEN(6),
+  SPACE_AROUND(7);
 
-  private int mIntValue;
+  private final int mIntValue;
 
   YogaAlign(int intValue) {
     mIntValue = intValue;
@@ -38,7 +38,9 @@ public enum YogaAlign {
       case 3: return FLEX_END;
       case 4: return STRETCH;
       case 5: return BASELINE;
-      default: throw new IllegalArgumentException("Unkown enum value: " + value);
+      case 6: return SPACE_BETWEEN;
+      case 7: return SPACE_AROUND;
+      default: throw new IllegalArgumentException("Unknown enum value: " + value);
     }
   }
 }
